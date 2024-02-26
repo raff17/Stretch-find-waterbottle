@@ -1,0 +1,47 @@
+#!/bin/bash
+
+export ROS_HOSTNAME=localhost
+export ROS_MASTER_URI=http://localhost:11311
+
+
+echo "Launching Stretch Core Driver..."
+roslaunch stretch_core stretch_driver.launch &
+pid="$! $pid"
+
+sleep 3s
+
+echo "Switching to Navigation Mode..."
+rosservice call /switch_to_navigation_mode &
+pid="$! $pid"
+
+sleep 3s
+
+
+echo "Launching d435i high resolution camera..."
+roslaunch stretch_core d435i_high_resolution.launch &
+pid="$! $pid"
+
+sleep 3s
+
+
+echo "Launching Aruco Node..."
+roslaunch stretch_core stretch_aruco.launch &
+pid="$! $pid"
+
+sleep 3s
+
+echo "Launching map"
+roslaunch stretch_navigation navigation.launch map_yaml:=/home/hello-robot/stretch_user/maps/dfp_map.yaml & 
+pid="$! $pid"
+
+sleep 3s
+
+
+echo "Launching rviz..."
+rosrun rviz rviz -d /home/hello-robot/catkin_ws/src/stretch_tutorials/rviz/aruco_detector_example.rviz &
+pid="$! $pid"
+
+sleep 3s
+
+
+sleep 24h
