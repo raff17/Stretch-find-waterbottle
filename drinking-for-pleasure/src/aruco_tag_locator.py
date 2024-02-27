@@ -68,7 +68,7 @@ class LocateArUcoTag(hm.HelloNode):
         self.joint_states_sub = rospy.Subscriber('/stretch/joint_states', JointState, self.joint_states_callback)
 
         # Initialize publisher
-        self.transform_pub = rospy.Publisher('ArUco_transform', TransformStamped, queue_size=10)
+        self.transform_pub = rospy.Publisher('/ArUco_transform', TransformStamped, queue_size=10)
         self.pub = rospy.Publisher('/stretch/cmd_vel', Twist, queue_size=1) #/stretch_diff_drive_controller/cmd_vel for gazebo
 
         # Initialize the variable that will store the joint state positions
@@ -136,6 +136,7 @@ class LocateArUcoTag(hm.HelloNode):
         reached = False
         x = curGoal.x
         y = curGoal.y
+        z = curGoal.z
         reached = False
         rospy.loginfo("Inside move_to_goal_point()")
         # While the program is running or the end goal has not been the loop will continue indefinitely
@@ -144,9 +145,10 @@ class LocateArUcoTag(hm.HelloNode):
             # self.cur_y = msg.pose.pose.position.y
             inc_x = x - self.cur_x
             inc_y = y - self.cur_y
-
+            inc_z  = z
             rospy.loginfo("Incrementation of x: " + str(inc_x))
             rospy.loginfo("Incrementation of y: " + str(inc_y))
+            rospy.loginfo("Incrementation of z: " + str(inc_z))
             rospy.loginfo("Current goal: " + str(curGoal))
 
             angle_to_goal = atan2(inc_y, inc_x)
@@ -257,7 +259,8 @@ class LocateArUcoTag(hm.HelloNode):
         newPoint = Point()
         newPoint.x = bottlePoint[0]
         newPoint.y = bottlePoint[1]
-        
+        newPoint.z = bottlePoint[2]
+
         self.move_to_goal_point(newPoint)
         
         #self.nav.go_to(position[0], position[1], rotation[2]) # position[2]
