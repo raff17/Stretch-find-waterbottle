@@ -98,7 +98,8 @@ class LocateArUcoTag(hm.HelloNode):
         self.theta = 0.0
 
         self.delta = 0.2
-
+        self.delt_vert = 0.02
+        
         self.rot_speed = 0.25
         self.forward_speed = 0.6
         self.move = Twist()
@@ -130,7 +131,8 @@ class LocateArUcoTag(hm.HelloNode):
         # rospy.loginfo("Current theta value: " + str(self.theta))
         #return self.cur_x
 
-    
+
+
     def move_to_goal_point(self, curGoal):
         # print(self)
         reached = False
@@ -262,6 +264,7 @@ class LocateArUcoTag(hm.HelloNode):
         newPoint.z = bottlePoint[2]
 
         self.move_to_goal_point(newPoint)
+        self.arm_position(newPoint)
         
         #self.nav.go_to(position[0], position[1], rotation[2]) # position[2]
         
@@ -372,6 +375,33 @@ class LocateArUcoTag(hm.HelloNode):
         # Notify that the requested tag was not found
         rospy.loginfo("The requested tag '%s' was not found", tag_name)
 
+
+
+    def arm_position(self, data):
+        '''Arm move up command'''
+        reached = False
+        z = data.z
+        reached = False
+        while not rospy.is_shutdown() and not reached:
+            command = {'joint': 'joint_lift', 'delta': z}
+            point = JointTrajectoryPoint()
+            point.time_from_start = rospy.Duration(0.1)
+
+            trajectory_goal = FollowJointTrajectoryGoal()
+            trajectory_goal.goal_time_tolerance = rospy.Time(0.25)
+            joint_name = command['joint']
+            trajectory_goal.trajectory.joint_names = [joint_name]
+
+            delta = command['delta']
+            new_value = delta
+            point.positions = [new_value]
+
+            trajectory_goal.trajectory.points = [point]
+            trajectory_goal.trajectory.header.stamp = rospy.Time.now()
+            self.trajectory_client.send_goal(trajectory_goal)
+
+
+    # TODO: test code as is, BUT REMOVE THE JOINT_LIFT from the open wrist. IF THIS DOES NOT WORK THEN WE ADD the data part into open wrist and change the JOINT_LIFT value
     
     def open_wrist(self):
         open_point = JointTrajectoryPoint()
