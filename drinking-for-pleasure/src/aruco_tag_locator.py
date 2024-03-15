@@ -22,7 +22,6 @@ import Session as session # Our own file for handling error messages
 import hello_helpers.hello_misc as hm
 
 # We're going to subscribe to a JointState message type, so we need to import
-# the definition for it
 from sensor_msgs.msg import JointState
 
 # Import the FollowJointTrajectoryGoal from the control_msgs.msg package to
@@ -30,7 +29,6 @@ from sensor_msgs.msg import JointState
 from control_msgs.msg import FollowJointTrajectoryGoal
 
 # Import JointTrajectoryPoint from the trajectory_msgs package to define
-# robot trajectories
 from trajectory_msgs.msg import JointTrajectoryPoint
 
 # Import TransformStamped from the geometry_msgs package for the publisher
@@ -119,22 +117,25 @@ class LocateArUcoTag(hm.HelloNode):
     
 
     def newOdom(self, msg):
-        # print(f"msg = {msg}")
+        """
+        A function that get's the odom of the robot (x,y)
+        :param self: msg data from the robot
+        """
         # get the current x and y position values for the robot
         self.cur_x = msg.pose.pose.position.x
         self.cur_y = msg.pose.pose.position.y
         
         rot_q = msg.pose.pose.orientation
         (roll, pitch, self.theta) = euler_from_quaternion([rot_q.x, rot_q.y, rot_q.z, rot_q.w])
-        # rospy.loginfo("Current x-coordinate: " + str(self.cur_x))
-        # rospy.loginfo("Current y-coordinate: " + str(self.cur_y))
-        # rospy.loginfo("Current theta value: " + str(self.theta))
-        #return self.cur_x
 
 
 
     def move_to_goal_point(self, curGoal):
-        # print(self)
+        """
+        A function that detects if the robot has reached the goal! and moves the robot towards the goal
+        :param self: location of goal (x,y,z)
+        """
+        
         reached = False
         x = curGoal.x
         y = curGoal.y
@@ -143,8 +144,6 @@ class LocateArUcoTag(hm.HelloNode):
         rospy.loginfo("Inside move_to_goal_point()")
         # While the program is running or the end goal has not been the loop will continue indefinitely
         while not rospy.is_shutdown() and not reached:
-            # self.cur_x = msg.pose.pose.position.x
-            # self.cur_y = msg.pose.pose.position.y
             inc_x = x - self.cur_x
             inc_y = y - self.cur_y
             inc_z  = z
@@ -164,8 +163,6 @@ class LocateArUcoTag(hm.HelloNode):
                 self.move.linear.x = 0.0
                 self.move.angular.z = 0.0
                 reached = True
-
-
             elif abs(angle_to_goal - self.theta) > 0.3:  # self.delta:
                 if y > 0:
                     self.move.linear.x = 0.0
@@ -174,11 +171,9 @@ class LocateArUcoTag(hm.HelloNode):
                 else:
                     self.move.linear.x = 0.0
                     self.move.angular.z = -1 * self.rot_speed  # -0.25
-
             else:
                 self.move.linear.x = self.forward_speed  # 0.5
                 self.move.angular.z = 0.0
-
             self.pub.publish(self.move)
             #break
         return dist
@@ -188,7 +183,6 @@ class LocateArUcoTag(hm.HelloNode):
     def joint_states_callback(self, msg):
         """
         A callback function that stores Stretch's joint states.
-        :param self: The self reference.
         :param msg: The JointState message type.
         """
         self.joint_state = msg
@@ -197,7 +191,6 @@ class LocateArUcoTag(hm.HelloNode):
         '''
         Handles single joint control commands by constructing a FollowJointTrajectoryGoal
         message and sending it to the trajectory_client created in hello_misc.
-        :param self: The self reference.
         :param command: A dictionary message type.
         '''
         if (self.joint_state is not None) and (command is not None):
@@ -244,6 +237,10 @@ class LocateArUcoTag(hm.HelloNode):
             self.trajectory_client.wait_for_result()
     
     def move_forward(self, bottlePose):
+        """
+        A Function that moves the robot forward (simple enough)
+        :param: msg data from the robot of where the bottle is
+        """
         position = [bottlePose.transform.translation.x,
                     bottlePose.transform.translation.y,
                     bottlePose.transform.translation.z]
@@ -266,35 +263,15 @@ class LocateArUcoTag(hm.HelloNode):
         self.move_to_goal_point(newPoint)
         self.arm_position(newPoint)
         
-        #self.nav.go_to(position[0], position[1], rotation[2]) # position[2]
-        
-        #command = Twist()
-
-	# A Twist has three linear velocities (in meters per second), along each of the axes.
-	# For Stretch, it will only pay attention to the x velocity, since it can't
-	# directly move in the y direction or the z direction
-        #command.linear.x = 0.1
-        #command.linear.y = 0.0
-        #command.linear.z = 0.0
-
-	# A Twist also has three rotational velocities (in radians per second).
-	# The Stretch will only respond to rotations around the z (vertical) axis
-        #command.angular.x = 0.0
-        #command.angular.y = 0.0
-        #command.angular.z = 0.0
-        #rospy.loginfo("Trying to move")
-        
-        # Publish the Twist commands
-        #self.pub.publish(command)
-        
     def move_forward_one_second(self):
+        """
+        A function that makes the robot move forward for 1 second (for safety [so robot does not turn and hit someone or something])
+        """
         command = Twist()
 
 	# A Twist has three linear velocities (in meters per second), along each of the axes.
 	# For Stretch, it will only pay attention to the x velocity, since it can't
 	# directly move in the y direction or the z direction
-        #start = time.get_time()
-        #while time.Time() - start < 1:
         command.linear.x = 0.1
         command.linear.y = 0.0
         command.linear.z = 0.0
@@ -304,8 +281,7 @@ class LocateArUcoTag(hm.HelloNode):
         command.angular.x = 0.0
         command.angular.y = 0.0
         command.angular.z = 0.0
-        #rospy.loginfo("Trying to move")
-        
+
         # Publish the Twist commands
         self.pub.publish(command)
         time.sleep(2.0)
@@ -328,7 +304,6 @@ class LocateArUcoTag(hm.HelloNode):
         """
         A function that actuates the camera to search for a defined ArUco tag
         marker. Then the function returns the pose.
-        :param self: The self reference.
         :param tag_name: A string value of the ArUco marker name.
 
         :returns transform: The docking station's TransformStamped message.
@@ -378,38 +353,37 @@ class LocateArUcoTag(hm.HelloNode):
 
 
     def arm_position(self, data):
-        '''Arm move up command'''
-        reached = False
-        z = data.z
-        reached = False
-        while not rospy.is_shutdown() and not reached:
-            command = {'joint': 'joint_lift', 'delta': z}
-            point = JointTrajectoryPoint()
-            point.time_from_start = rospy.Duration(0.1)
+        """
+        A function that moves the robot arm to the height of the bottle
+        :param self: msg data (z) of the bottle
+        """
+        height = data.z
+        move = JointTrajectoryPoint()
+        move.time_from_start = rospy.Duration(0.000)
+        move.positions = [height] #  0.16
 
-            trajectory_goal = FollowJointTrajectoryGoal()
-            trajectory_goal.goal_time_tolerance = rospy.Time(0.25)
-            joint_name = command['joint']
-            trajectory_goal.trajectory.joint_names = [joint_name]
-
-            delta = command['delta']
-            new_value = delta
-            point.positions = [new_value]
-
-            trajectory_goal.trajectory.points = [point]
-            trajectory_goal.trajectory.header.stamp = rospy.Time.now()
-            self.trajectory_client.send_goal(trajectory_goal)
-
-
-    # TODO: test code as is, BUT REMOVE THE JOINT_LIFT from the open wrist. IF THIS DOES NOT WORK THEN WE ADD the data part into open wrist and change the JOINT_LIFT value
-    
-    def open_wrist(self):
-        open_point = JointTrajectoryPoint()
-        open_point.time_from_start = rospy.Duration(0.000)
-        open_point.positions = [0.85, 0.1, 1.75] #  0.16
         
         trajectory_goal = FollowJointTrajectoryGoal()
-        trajectory_goal.trajectory.joint_names = ['joint_lift', 'wrist_extension', 'joint_wrist_yaw'] #, 'joint_gripper_finger_left'
+        trajectory_goal.trajectory.joint_names = ['joint_lift'] #, 'joint_gripper_finger_left'
+        trajectory_goal.trajectory.points = [move]
+        trajectory_goal.trajectory.header.stamp = rospy.Time(0.0)
+        trajectory_goal.trajectory.header.frame_id = 'base_link'
+        
+        self.trajectory_client.send_goal(trajectory_goal)
+        rospy.loginfo('Sent open wrist goal = {0}'.format(trajectory_goal))
+        self.trajectory_client.wait_for_result()  
+
+    
+    def open_wrist(self):
+        """
+        A function that turns the wrist of the robot to face forward AND open the gripper
+        """
+        open_point = JointTrajectoryPoint()
+        open_point.time_from_start = rospy.Duration(0.000)
+        open_point.positions = [0.1, 1.75] #  0.16
+        
+        trajectory_goal = FollowJointTrajectoryGoal()
+        trajectory_goal.trajectory.joint_names = ['wrist_extension', 'joint_wrist_yaw'] #, 'joint_gripper_finger_left'
         trajectory_goal.trajectory.points = [open_point]
         trajectory_goal.trajectory.header.stamp = rospy.Time(0.0)
         trajectory_goal.trajectory.header.frame_id = 'base_link'
@@ -420,7 +394,9 @@ class LocateArUcoTag(hm.HelloNode):
         
     
     def close_wrist(self):
-        
+        """
+        A function that closes the gripper
+        """
         close_point = JointTrajectoryPoint()
         close_point.time_from_start = rospy.Duration(0.000)
         close_point.positions = [-0.1]
@@ -452,6 +428,8 @@ class LocateArUcoTag(hm.HelloNode):
         self.tf_buffer = tf2_ros.Buffer()
         self.listener = tf2_ros.TransformListener(self.tf_buffer)
 
+        rospy.sleep(1.0)
+        self.open_wrist()
         # Give the listener some time to accumulate transforms
         rospy.sleep(1.0)
 
@@ -460,11 +438,7 @@ class LocateArUcoTag(hm.HelloNode):
         self.move_forward_one_second()
 
         # Search for the ArUco marker for the docking station
-        self.open_wrist()
         time.sleep(1.0)
-        #self.move_forward_one_second()
-        #time.sleep(2)
-        #self.close_wrist()
         
         pose = self.find_tag("bottle")
         return pose
@@ -472,47 +446,11 @@ class LocateArUcoTag(hm.HelloNode):
 if __name__ == '__main__':
     # Use a try-except block
     try:
-        ########################
-        # Create the socket 
-        ########################
-        #listenSocket = socket(AF_INET, SOCK_DGRAM)
-        #listenSocket.bind(('', SERVERPORT))
-        
-        #addr = (HOST, SERVERPORT)
-        
-        #newSession = session.Session(listenSocket, addr)
-        #rospy.loginfo("Socket created, waiting for message")
-        #session_packet = newSession.receive_message()
-        #rospy.loginfo("The received message '%s' from the client", session_packet['data'])
-        #newSession.shutdown()
-    	
-    	
-    	
-    	
-    	# Initialize the node, and call it "move"
-    	# Instantiate the `LocateArUcoTag()` object	
+
         node = LocateArUcoTag()
     	# Run the `main()` method
         bottlePose = node.main()
-        # robot = stretch_body.robot.Robot()
-        # robot.startup()
 
-        # robot.base.translate_by(x_m=0.5)
-        # robot.push_command()
-        # time.sleep(4.0)
-
-        # robot.base.set_rotational_velocity(v_r=0.1) #switch to velocity controller
-        # robot.push_command()
-        # time.sleep(4.0)
-
-        # robot.base.set_rotational_velocity(v_r=0.0) #stop motion
-        # robot.push_command()
-
-        # robot.stop()
-    	# For this example, we want to publish at 10Hz
-       
-    	# This will loop until ROS shuts down the node.  This can be done on the
-    	# command line with a ctrl-C, or automatically from roslaunch
         while not rospy.is_shutdown():
             # Run the move_foward function in the Move class
             #while bottlePose is None:
@@ -523,12 +461,8 @@ if __name__ == '__main__':
                 node.move_forward(bottlePose)
             else:
                 node.move_forward_one_second()
-            
-                #rospy.loginfo(str(bottlePose.transform.translation))
-            # Do an idle wait to control the publish rate. If we don't control the
-            # rate, the node will publish as fast as it can, and consume all of the
-            # available CPU resources. This will also add a lot of network traffic,
-            # possibly slowing down other things
-            rate.sleep()
+            break
+        node.close_wrist()
+            # rospy.Rate.sleep(3)
     except KeyboardInterrupt:
         rospy.loginfo('interrupt received, so shutting down')
