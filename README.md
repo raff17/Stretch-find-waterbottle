@@ -20,3 +20,6 @@ Future work: add a way for the robot to return to the original position and drop
 
 ## Robot process:
 Stretch will start by scanning the environment for the object. Once the object is detected Stretch will position the arm based on the object's position. After that, Stretch will start scanning again (to double-check) and once it detects the object again Stretch will move towards that object.
+
+## Robot video:
+![Uploading ROSclass_project_video-1.gif…]()
