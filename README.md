@@ -22,4 +22,4 @@ Future work: add a way for the robot to return to the original position and drop
 Stretch will start by scanning the environment for the object. Once the object is detected Stretch will position the arm based on the object's position. After that, Stretch will start scanning again (to double-check) and once it detects the object again Stretch will move towards that object.
 
 ## Robot video:
-![ROSclass_project_video-1](https://github.com/raff17/Stretch-find-waterbottle/assets/76973156/7df73716-b606-4175-b5e3-7e8d9f23dc05)
+![ROSclass_project_video3-1](https://github.com/raff17/Stretch-find-waterbottle/assets/76973156/9c1db0c6-7316-440b-a0f2-1dac4878ab3a)
